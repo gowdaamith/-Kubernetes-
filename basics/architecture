@@ -1,0 +1,199 @@
+                                             KUBERNETES ARCHITECTURE OVERVIEW
+                                         _______________________________________
+
+Kubernetes is a distributed system with two main parts
+
+Control Plane:
+
+The brain of the cluster.
+Responsible for deciding what should happne and managing the cluster state
+
+components
+*Kube-apiserver
+*etcd
+*kube-scheduler
+*kube-controller-manager
+*cloud-controller-manager
+
+What is control plane?
+
+Think of Kubernetes as a big brain that controls  a group of computers (called node)
+The control plane is that brain - it decides what should happen in your cluster
+
+The control plane is made up of a few important parts
+
+1.kube-apiserver(the gateway/ brain connector)
+
+=>Its like the front desk of kubernetes
+
+When you use kubectl,you are talking to this component
+
+What it handles:
+*Authnetication : checks who are you 
+*Authorixation (RBAC): Checks what you are allowed to do
+*Validation: checks if your request is valid
+*REST API : It gives all information in a web-style(http/json )format
+*Stores data in etcd : its the only one that saves /reads data to/from etcd
+
+example 
+when you run:
+=> kubectl create deployment nginx --image=nginx
+
+==>kubectl seend this to kube-apiserver
+=>api server checks and stores this in etcd
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+2.etcd (The database /memory)
+
+its like a notebook  or database  that remembers  everything  aobut you r cluster
+
+it stores
+*Pods,Services,Deployment
+*Configuration ,Secrets, and more 
+
+Important facts
+*its a key value store
+*its strongly consistent (no data mismatch)
+*you should backdup it often
+*In big setup, it runs in HA mode (more than one copy)
+
+example : if your cluster restart ,etcd makes sure nothing is lost
+
+-----------------------------------------------------------------------------------------------------------------------
+3.kube-scheduler (the job chooser)
+
+what it does ?
+it decides which node should run your Pod
+
+When you create a pod .it doesnot know where to go yet
+so the scheduler looks at all available nodes and picks the best on e
+
+How it decides:
+*How much CPU/RAM  each node has
+*Node rules(taints/tolerations)
+*Affinity /anti-affinity(pod palcement preferences)
+*Networking topology
+
+Example:if one node is full and another is empty -<scheduler sends the pod to the empty one.
+
+-----------------------------------------------------------------------------------------------------------------------kkube-controller-manager(the maintainer)
+
+what it does
+its like a watchdog . it always  watches  and fixes the things automatically
+it runs many controllers ,each doing a small job:
+
+*node controller->checks if nodes area  alive
+*Deployment contorller-> makes sure the right nuber of pods are running
+*service controller-> updates services and endpoints
+*Account controller -> managers services accounts
+
+how it works 
+
+it keeps comparing 
+what you want (desired state)v/s whats actually  happening(real state)
+
+==>if something is wrong it fixes it
+
+cloud-controller-manager(optional)
+
+Used when you're running on clouds like aws
+
+it talks  ot the cloud provider api to do the tasks like:
+*create a load balancer
+*manage volumes (EBS ,Azure disk ,etc)
+*Manage routes
+
+example: 
+if you make service fo type loadbalancer ,this manager asks AWS  TO CREATE THE LOAD balancer.
+
++------------------------------------------------------+
+|                    Kubernetes Cluster                |
+|                                                      |
+|  +----------------+         +-------------------+    |
+|  |  Master Node   |         |   Worker Nodes    |    |
+|  | (Control Plane)|         | (Where apps run)  |    |
+|  +----------------+         +-------------------+    |
+|                                                      |
++------------------------------------------------------+
+
+WORKER NODES - THE MUSCLES FO KUBERNETES
+
+Workers nodes are the machines (physical ro virtual) where your apps (containers )actually run
+if the control  plane is the brain ,the workers node is the body doing the work
+
+Each node has three  main components:
+
+1.Kubelet- The worker Agent
+*its like a personal assistant for the node
+*Receives orders from the  control plane (API SERVER)
+*make sure the containers are running exactly as described in the podspec
+
+other tasks 
+*Performs health checks
+ *liveness probe -> is the container is alive
+ *Readiness probe->  is this container start ready to receive traffic"
+ *Startup probe _> "did this containser start  successfully 
+
+*Reports status of pods  and node back to the control plane.
+*Exposes metrics for monitoring
+
+
+example:
+if a pod crashes ,kubelet  notices it and tells the contorl plane  -> new pod gets scheduled
+
+2.Kube-proxy -[ the traffic controller]
+-------------------------------------
+ 
+*Handels networking  for pods  on the node
+*makes sure that traffic reaches  the correct pod
+
+ modes"
+
+iptable-> uses linux firewall  rules (default and simple)
+ipvs  ->  high performance routing for bigger clusters
+
+
+Example :
+ you create a service called web-services to access your pods
+ kube-proxy sets up the routing rules so that when you hit  web -service ,traffic goes to one of the nginx pods running on the nodes
+
+3.Container runtime -the engine
+--------------------------------
+*The engine that actually runs your containers
+*pull s container images form a registry (docker hub)
+*Starts and stops  containers  as instructed by kubelet
+
+Popular Runtime:
+containerd-> lightweight ,default in many clusters
+CRI-O -> focused on  kubernetes
+Docker -> still used in some older setups
+
+Example :
+ when kubelet  says "Run nginx containers" .the containers runtime pulls the nginx : latest  image and runs inside the
+  pod
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

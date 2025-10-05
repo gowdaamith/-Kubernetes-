@@ -41,14 +41,3 @@ job/cornjob                                     Runs tasks that end (job)  ro re
 
 
 
-########################################################################################################################
-| 🧩 **Concept**    | 💬 **Simple Meaning**                                                                                  | 🔍 **When You Use It**                                                    | ⚙️ **Example**                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **Pod**           | The **smallest unit** in Kubernetes. It holds **one or more containers** that share network & storage. | When you want to **run an app** (like one Nginx container).               | Run an Nginx web server inside a pod.                          |
-| **Service**       | Gives your Pods a **fixed IP & name**, so apps can talk to each other even if Pods restart or move.    | When you want to **expose your Pods** internally or externally.           | Expose Nginx Pods via a **NodePort** or **LoadBalancer**.      |
-| **Deployment**    | Tells Kubernetes **how many Pods to run**, and **handles rolling updates**.                            | When you want to **manage replicas** of a Pod and auto-healing.           | Deploy 3 replicas of Nginx that auto-restart if one fails.     |
-| **ReplicaSet**    | Ensures a fixed number of Pods are running.                                                            | Rarely used directly — it’s used **inside Deployments**.                  | Deployment uses ReplicaSet to keep 3 Pods alive.               |
-| **Namespace**     | Like folders in your cluster — helps organize and isolate resources.                                   | When you want **separation** (e.g., dev/test/prod environments).          | Keep “dev” and “prod” services in different namespaces.        |
-| **ConfigMap**     | Stores **non-sensitive configuration** (key-           | Store DB password securely instead of hardco
-| **Ingress**       | Routes **HTTP/HTTPS traffic** from outside the cluster to Services.                                    | When you want to **expose multiple apps** through one domain.             | Example: `example.com/api` → API service, `/app` → UI service. |
-| **Volume**        | A piece of **storage** attached to a Pod.                    

@@ -1,0 +1,268 @@
+                                                   KUBERNETES    
+                                                 -------------
+What is Kubernetes?
+Kubernetes also called K8s is an open source  container orchestration  platform designed  to automate the deployment  ,
+scaling and managment  of containarixed application 
+
+It was originally developed by google ,inspired by their  internal system called BORG  and later donated to the cloud native  computing foundation  
+
+-----------------------------------------------------------------------------------------------------------------------\
+Why kuberentes ?(The problem it solves)
+
+Before kubenetes ,people manually  managed  containers (using the docker commands)
+
+this created the major problem in 
+
+
+          Problem                                                         Descriptiiiion
+manual deployment                                            you have to  start/stop  containers  yourself
+Scaling                                                      If the traffic incrreasee ,you must run more containers 
+                                                             manually
+Load balancing                                               No build in system  to distribute traffic
+Self -healing                                                If containers crashes ,it stays down unlesss restarted  
+                                                              manually
+Rollouts/Rollbacks                                           Updating appllications safely  was hard
+Service discovery                                            Hard to know which container run where
+Infrastruccture  drift                                       Configuration changes were inconsistent  across environment
+
+
+
+so Kubenetes automantes all these tasks
+-----------------------------------------------------------------------------------------------------------------------
+Core idea behind the kubernetes 
+
+Kubernetes acts as  a cluster manager  that abstracts infrastructure
+
+You don't need to manage the containers  directly  - you define desired state  and kubernetes ensures the systen matches the state
+
+Example 
+
+Yaml
+apiVersion: app/v1
+kind: Deployment
+metadata: 
+  name: web
+spec: 
+  replica: 3
+  template: 
+    metadata: 
+      lables:
+        app: web 
+    spec:
+      containers: 
+        - name: web
+          image: nginx
+
+########################################################################################################################
+==>apiVersion: apps/v1
+*Tells kubernetes which API version of the resources to use 
+*apps/v1 is used for deplyment statefulsets ,Daemonsets etc,
+
+other common values:
+
+apiversion                                                    used for
+v1                                                      Basic resources like Pod ,services .ConfigMap ,Secret
+batch /v1                                              Cronjobs  ,jobs
+networking.k8s.io/v1                                  Networkpolicy ,Ingress
+autoscaling/v2                                        HorizontalPodAutoscaler
+
+==>kind: deployment 
+
+*Defines what type of object you're creating 
+*Deplyment  ensures the desired numbers  of identical  Pods are running and handles updates / rollbacks automatically
+*
+othe common kinds
+
+Pod  - single containers instance
+RelicaSet - manages replica Pods
+DaemonSet - runs one pod per node
+statefulset -for statefulapps (eg databases)
+job -runs once and complete
+CronJob -runs on schdule
+
+==>metadata
+metadata is the information about the object itself (not about the app insside it)
+metadata: 
+  name: app
+
+commonfiels of metadata
+
+field 
+
+name                                                     name of the resources(unique within the namespace)
+namespace                                                namespace to deploy it in (default if not specified)
+labels                                                   key-value pair for grouping and selection 
+annotation                                               Non - idenfifying metadata like version .build info
+uid                                                      unique id  auto genereated
+creationTimestamp                                        Autogenerataed by kubernetes
+----------------------------------------------------
+Example 
+metadata:
+  name:web
+  namespace: dev
+  labels:
+    tier: forntend
+  annotation:
+    owners: amith
+    description: nginx web development
+------------------------------------------------
+ 
+==>spec 
+the specification - this tells kubernetes what the desired stae of the deployment should look like 
+
+spec: 
+  replica: 3
+  template:
+
+comman filed inside the spec(for development)
+
+filed                                                                description 
+
+replicas                                                   Number of pod copies(desired count)
+selector                                                   which pod belong to this deployment
+template                                                  Blueprint for creating pods
+strategy                                                  how updates happen (Rolling updates or recreate)
+minReadyseconds                                           minimum seconds a pod should be ready before cosidered availab                                                          ble
+revisionHistoryLimit                                      How many old replicasets to keep for rollback
+
+---------------------------------------------------
+example
+
+spec:
+  replicas: 3
+  selector:
+    matachlables:
+      app: web
+  strategy: 
+    type: rollingupdate
+ rollingUpdate:
+    maxSurge: 1
+   maxUnavailable: 1
+-----------------------------------------------
+
+==>template
+this is the pod template - kubernetes uses this to create pods for your deplyment
+-
+
+-----------------------------------------------
+template:
+  metadata:
+    labels:
+      app: web
+  spce: 
+    containers:
+      - name: web
+        image: nginx
+
+inside the template --> metadata
+
+*define labels that identify pods created by this deployment
+*These laabels must match  the selector of the deployment
+
+inside template -> spec
+ 
+this defines  the podspec (how each pod should look)
+
+==>containers
+a list fo containers that will run inside each pod
+
+containers: 
+  -name: web
+   image: nginx
+
+common field for containers
+
+name                                                   containers name
+image                                                  docker image to run
+ports                                                  port exposed by the containe
+env                                                    environment variables
+resources                                             CPU / memory limits and requests
+volumeMounts                                           Attach volumes (storage) to containers
+command                                               override the default containers entry point
+args                                                  Arguments to the command
+livenessProbe                                         Healt check to restart if containers fails
+readinessProbe                                       Health check to signal if ready to serve traffiv
+startupProbe                                         Check for slow starting apps
+securitycontext                                      Run as specific user.set permission
+imagePullPolicy                                       when to pull image(Always,IfnotPresen,Never)
+-----------------------------------------------------------------------------------------------------------------------
+example:
+
+containers: 
+  - name: web
+    image: nginx:1.25
+    ports:
+      - containerPort: 80
+    env:
+      - name:ENV
+        value: production
+   reosruces:
+     limits:
+       cpu: "500m"
+       memeory: "128Mi" 
+   livenessProbe:
+     httpGet:
+       path: /
+       port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 30
+------------------------------------------------------------------------------------------------------------------------
+
+final (complete deployment)
+
+apiVersion: apps/v1
+kind: deployment
+metadata:
+  name: web
+  labels:
+    app: web
+    tier: frontend 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+ strategy:
+   type: RollingUpdate
+   rolllingUpdate:
+     maxSurge: 1
+     maxUnavailable: 1
+  template: 
+    metadata:
+      labels:
+        app: web
+  spec: 
+    containers:
+      - name: web
+        image: nginx:1.25
+        ports:
+          - containersPort: 80
+        env:
+          - name: ENV
+            value: production
+        resources: 
+          limits:
+            cpu: "500"
+            memory: "256mi"
+          requests:
+            cpu: "250m"
+            memory: "128Mi"
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+       initialDelaySeconds: 10
+       periodSeconds: 30
+       imagePullPolicy: IfNotPresent
+
+####################################################################################################################### 
+You say "i want  3 nginx containers running
+kubernetes ensures
+
+1.if one dies -> it start a new one
+2.if you sccale replica to 5 --> it start two  more
+3.if you delete  one  -> it recreates automatiacally
+
+This is the declarative model , you declare the desired state ,Kubernetes maintains it
+
+

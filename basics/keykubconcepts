@@ -1,0 +1,54 @@
+Concepts                                                       description
+
+Pod                                                The smallest unit in Kubernetes .It holds one or more containers that                                                   share network and storage
+                                                   when you want to run an app (like one nginx container)
+
+Services                                           Gives your pods a fixed IP and name .so app can talk to each other   
+                                                   even if pods restart or move 
+                                                   when you want to expose your pods internally or externally
+
+Deployment                                        Tells the kubernetes  how many pods to runn    and handles rolling 
+                                                  updates
+                                                  when you want to manage replicas of a Pod and auto healing
+
+Replicaset                                        Ensures fixed number of pods running  
+                                                   Rarely used directly its used inside the deployment
+
+Namespace                                         Like folders in your cluster -helps organixe and isolate resources
+                                                  when you want separation (eg dev/test/prod)
+
+ConfigMap                                         Stores non-sensitive configuration (like key -value pairs)
+                                                   when you want to inject  configs  into pods without changing  the 
+                                                   image
+
+Secret                                            Stores sensitive info(password,API Keys, certification)
+                                                   when you need to secure credentials in pods
+
+Ingress                                           Routes HTTP/HTTPS traffic from outside the cluster to services
+                                                  when you want to expose multiple  apps through one domain
+
+Volume                                           A piece of storage  attached to a Pod
+                                                 When you need persistent data (logs,database data ,files)
+
+StatefulSet                                      Like deployment,but for stateful app (database,kafka,redis,etc)
+                                                 when you need stabel networkids  AND persistend storage
+
+DaemonSet                                        Ensure one pod per Node -used for backgroud system level tasks
+                                                   when you need to run a pod on all the node like a monitoring agents
+
+job/cornjob                                     Runs tasks that end (job)  ro repeat on schdule(cornjob) 
+                                                 when you need batch or scheduled works
+
+
+
+########################################################################################################################
+| 🧩 **Concept**    | 💬 **Simple Meaning**                                                                                  | 🔍 **When You Use It**                                                    | ⚙️ **Example**                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Pod**           | The **smallest unit** in Kubernetes. It holds **one or more containers** that share network & storage. | When you want to **run an app** (like one Nginx container).               | Run an Nginx web server inside a pod.                          |
+| **Service**       | Gives your Pods a **fixed IP & name**, so apps can talk to each other even if Pods restart or move.    | When you want to **expose your Pods** internally or externally.           | Expose Nginx Pods via a **NodePort** or **LoadBalancer**.      |
+| **Deployment**    | Tells Kubernetes **how many Pods to run**, and **handles rolling updates**.                            | When you want to **manage replicas** of a Pod and auto-healing.           | Deploy 3 replicas of Nginx that auto-restart if one fails.     |
+| **ReplicaSet**    | Ensures a fixed number of Pods are running.                                                            | Rarely used directly — it’s used **inside Deployments**.                  | Deployment uses ReplicaSet to keep 3 Pods alive.               |
+| **Namespace**     | Like folders in your cluster — helps organize and isolate resources.                                   | When you want **separation** (e.g., dev/test/prod environments).          | Keep “dev” and “prod” services in different namespaces.        |
+| **ConfigMap**     | Stores **non-sensitive configuration** (key-           | Store DB password securely instead of hardco
+| **Ingress**       | Routes **HTTP/HTTPS traffic** from outside the cluster to Services.                                    | When you want to **expose multiple apps** through one domain.             | Example: `example.com/api` → API service, `/app` → UI service. |
+| **Volume**        | A piece of **storage** attached to a Pod.                    

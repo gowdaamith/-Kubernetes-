@@ -1,0 +1,116 @@
+Step:1
+Package Your app in a Containers
+
+Kubernetes runs containers ,so first your app must be containarixed.
+
+Example: Node.js app Dockerfile
+
+#use official node.js image
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json  ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD["node","index.js"]
+
+Buils and push to a container registry
+
+docker build -t amit'/app:v1  .
+docker tag amith/app:v1 <your registry> /amith/app:v1
+docker push <your registyr >/amith/app:v1
+
+step 2:Create a deployment YAML FILE
+
+apiVerison: apps/v1
+kind: Deployment
+metadata: 
+  name: myapp-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLables:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp 
+   spec:
+     containers:
+       - name: myapp
+         image: <your _registyr>/amith/app:v1
+         ports:
+           - containersPort: 3000
+save this as deployment.yaml
+
+step3: apply deployment
+
+==>kubectl apply -f deployment.yaml
+
+check the pods 
+kubectl get pods
+kubectl describe pod <pod_name>
+	
+-----------------------------------------------------------------------------------------------------------------------
+   
+Step 4.: Expose the app (servicse)
+
+To access  it .create  a service for public ,use Loadbalancerer type (works in AWS and GCP)
+'
+apiVersion: v1
+kind: Service
+metadata
+  name: myapp-services
+spec:
+  selector:
+    app: myapp
+  type: LoadBalancer
+  ports: 
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+Apply it: 
+kubectl apply -f service.yaml
+kubectl get svc myapp-service
+
+it will evnetually show a public external -ip where the app is accessible
+
+Step5: optional -ingress(for domain name)
+
+if you have a domain  ,you can use an ingress:
+
+apiversion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: myapp-ingress
+  annotations:
+    kubernets.io/ingress.class: nginx
+spec:
+  rules:
+    - host: myapp.example.com
+      http:
+       paths:
+         - path: /
+           pathType:  Prefix
+           backend :
+             service:
+               name: myapp-servies
+               port: 
+                 number: 80
+
+
+
+step 6:
+
+Scaling the app
+
+You can scale anytime 
+
+==>kubectl scale deployment myapp-deployment --replicas=5
+

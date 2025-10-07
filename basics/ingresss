@@ -1,0 +1,131 @@
+What is ingress in Kubernetes?
+A kubernetes ingress is an API object  that manages  external  HTTPS access to your applications running inside the cluster  
+
+A Service expose Pods.
+An ingress exposes multiple services under one single external IP ro domain  with smart routing and HTTPS
+
+
+wHY do we need Ingress?
+without Ingress
+*Each servies needs its own LoadBalancer ro Nodeprot to ber accessed exteranally
+*That means multiple public IPS  and more cost/configuration
+
+with ingress : 
+  you can have one entry point to access many apps
+
+Example:
+Path                                                      Route to service
+myapp.com/api                                           backend services
+myapp.com/api                                           frontend services
+
+How ingress works
+
+Here is the data flow
+
+user
+  |
+Ingress controller(like nginx / traefik)
+  |
+Ingress Resources(rules: domain/path)
+   |
+Kubernetes services
+   |
+Pods
+
+so there are two parts
+1.Ingress resources ->  defines routing rules
+2.Ingress controller -> actual software that enforces those rules ( like a smart load balancer inside tthe cluster)
+
+Ingresss resource
+
+
+Here's a basic example
+apiVersion: networking.k8s.io/v1
+kind: ingress
+metadata: 
+  name: myapp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules: 
+    - host: myapp.example.com
+      http:
+        paths:
+          - path: /web
+            pathType: Prefix
+            backend:
+              service:
+                name: web-service
+                port:
+                  number: 80
+          - path: /api
+            pathtype: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 80
+
+whats happening here 
+*host: your domain (eg: myapp.example.com)
+*/web: routeto web-services
+*/api: route to api services
+
+one single ingress = multiple sevices behind it
+
+
+Ingress controller
+
+An ingress Resources alone does nothing 
+You also need ot deploy an ingress controller  a special Pod that watches ingress reources and configures routing 
+
+
+Popular ingress controller
+
+Name                                                                        Descripiton
+
+Ngninx ingress controller                                       Most common flexible .open source
+
+Traefix                                                         cloud-native, support auto -discovery
+
+HAProxy                                                         high performance L4/L7 proxy
+
+AWS ALB ingresss controller                                    uses AWS load balancer applicatin
+
+GKE Ingress                                                    build in for google kubernetes engine
+
+------------------------------------------------------------------------------------------------------------------------
+
+Ingress with HTTPS /SSL
+
+Ingress makes it easy to handle TLS/SSL termination (https)
+
+example:
+spec:
+  tls:
+    -hosts: 
+       - myapp.example.com
+     secreatName: myapp-tls
+
+*here you create a kubernetes secrete containing your ssl certificate and private key 
+*Then ingress terminate HTTPS at the controller
+
+many setups use cert-manager to automatically issue  and renew free let's encrypt SSL certificate
+
+--------------------------------------------------------------------------------------------------------------------
+7.Ingress in Action 
+
++------------------------+
+User Request -> | Ingress Controller     | ---> routes /api to api-service
+ (myapp.com/api)| (NGINX/Traefik)        | ---> routes /web to web-service
+                +------------------------+      
+
+8.ingress  vs services vs load balancer
+
+| Feature                                   | **Service (LoadBalancer)** | **Ingress**                   |
+| ----------------------------------------- | -------------------------- | ----------------------------- |
+| Exposes Pods                              | ✅ Yes                      | ✅ Yes                         |
+| Manages multiple services                 | ❌ No                       | ✅ Yes                         |
+| Handles routing (path-based / host-based) | ❌ No                       | ✅ Yes                         |
+| Supports TLS/SSL                          | ❌ Manual                   | ✅ Built-in                    |
+| Needs external IP per service             | ✅ Yes                      | ❌ No (one shared entry point) |

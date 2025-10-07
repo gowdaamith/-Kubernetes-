@@ -1,0 +1,134 @@
+RBAC
+
+What is RBAC?
+RBAC  stands  for Role -based Access control
+
+in kubernetes 
+  RBAC is a system to control who can do what in your cluster
+
+it answers two main questions
+1.who can access the cluster
+2.what action  can they perform 
+
+RBAC allows you to limit permission to users .groups ,or services accounts so they can only perform allowed operation
+
+Why RBAC is needed
+
+without RBAC :
+*any user with cluster access could delete pods ,services ro evne the whole cluster
+*security would be a nightmare in multi-tenant environment
+
+with RBAC
+
+*You can assign fine-grained permission 
+*ex : allow devo-team  to only read Pods ,but let admin create and delete them 
+
+Key components:
+There are four main objects in Kubernetes RBAC:
+
+componenets
+
+Role         
+
+ Defines permission for  actions like get,list,create on resources like Pods ,services,configmap
+
+ Namespace-scoped -> affect only the namespace it is created in [ex ->dev]
+
+clusterRole
+ Similar to role but applies cluster-wide : can also be used in a single namespace
+ cluster-scoped -> can control access to all namespace or cluster level rersources (like nodes)
+ Rolebinding -> Assings a role to a user.group,or service account .connects a Role to someone
+  
+                Namespace-scoped --> lets a specific user access resources in that namespace using the Roles permissions
+ 
+ Rolebinding -> Assigns a Role to a user,grdoup,ro services account, connects a Role to someone   
+                 
+               Namespace-scoped  lets a specific user access resources in that namespace using the Roles permission
+
+ ClusterRolebindiing -->Assigns a clusterRole to a user ,group,or services acccount . Grant permissions cluster -wide
+  
+                        Cluster-scoped -> gives user/group access to resources across all namespace
+
+
+
+Analog
+role --> job description for the department
+clusterrole -->. company wide job description
+rolebinding -> hr assigns the department  job to an employee
+clusterrolebinding -> hr assigns the company wide job to an employee
+
+
+Role Example:
+A Role that allows read only access to Pods in a namespace:
+
+apiVersion: rbac.authrization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev
+  name: pod-reader
+rules:
+  - apiGroup: [""]
+    resources: ["pods"]
+    verbs: ["get","watch","list"]
+
+Rolebinding example
+
+Assigns the pod-reader Role to a user called amith
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: 
+  name: read-pods
+  namespace: dev
+subjects: 
+  - kind: User
+    name: amith
+    apiGroups: rbac.authorization.k8s.io
+roleref:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+
+now amith can only list ,get or watch pods in the dev namespace  -nothing else
+
+ClusterRole Example
+ClusterRole for admins access across the the cluster
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: 
+  name: cluster-admin
+rules:
+  - apiGroup: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+
+
+* means everything - this is full cluster admin access
+
+4.clusterRoleBinding Example
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: 
+  name: amithcluster-admin
+subjects:
+  -kind: User
+   name: amith
+   apiGroup: rbac.authorization.k8s.io
+roleRef: 
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+NOw amith is a cluster-wide admin
+
+RBAC Best practices
+-------------------
+| Best Practice                                    | Reason                                         |
+| ------------------------------------------------ | ---------------------------------------------- |
+| Follow **least privilege principle**             | Give only required permissions                 |
+| Use **namespaced Roles** whenever possible       | Avoid giving cluster-wide access unnecessarily |
+| Use **service accounts** for automated processes | Avoid using user accounts for bots             |
+| Regularly **audit Roles and Bindings**           | Ensure old/unneeded access is removed          |
+| Combine with **NetworkPolicies**                 | For both authentication and traffic security   |
